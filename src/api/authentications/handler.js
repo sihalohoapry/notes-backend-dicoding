@@ -1,6 +1,4 @@
-const { payload } = require('@hapi/hapi/lib/validation');
 const ClientError = require('../../exceptions/ClientError');
-const AuthenticationError = require('../../exceptions/AuthenticationError');
 
 class AuthenticationsHandler {
   constructor(authenticationsService, usersService, tokenManager, validator) {
@@ -42,7 +40,7 @@ class AuthenticationsHandler {
         return response;
       }
       const response = h.response({
-        status: 'fail',
+        status: 'error',
         message: 'Maaf, terjadi kegagalan pada server kami.',
       });
       response.code(500);
@@ -53,14 +51,14 @@ class AuthenticationsHandler {
 
   async putAuthenticationHandler(request, h) {
     try {
-      this._validator.validatePutAuthenticationPayload(request, payload);
+      this._validator.validatePutAuthenticationPayload(request.payload);
       const { refreshToken } = request.payload;
       await this._authenticationsService.verifyRefreshToken(refreshToken);
       const { id } = this._tokenManager.verifyRefreshToken(refreshToken);
       const accessToken = this._tokenManager.generateAccessToken({ id });
       return {
         status: 'success',
-        message: 'Access token berhasil diperbarui',
+        message: 'Access Token berhasil diperbarui',
         data: {
           accessToken,
         },
@@ -79,6 +77,7 @@ class AuthenticationsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
@@ -94,7 +93,7 @@ class AuthenticationsHandler {
         message: 'Refresh token berhasil dihapus',
       };
     } catch (error) {
-      if (error instanceof AuthenticationError) {
+      if (error instanceof ClientError) {
         const response = h.response({
           status: 'fail',
           message: error.message,
