@@ -15,7 +15,9 @@ class CollaborationsHandler {
       this._validator.validateCollaborationPayload(request.payload);
       const { id: credentialId } = request.auth.credentials;
       const { noteId, userId } = request.payload;
-      this._notesService.verifyNoteOwner(noteId, credentialId);
+      console.error(noteId);
+      console.error(credentialId);
+      await this._notesService.verifyNoteOwner(noteId, credentialId);
       const collaborationId = await this._collaborationsService.addCollaboration(noteId, userId);
       const response = h.response({
         status: 'success',
@@ -40,6 +42,7 @@ class CollaborationsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami.',
       });
       response.code(500);
+      console.error(response.error);
       return response;
     }
   }
